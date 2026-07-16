@@ -62,10 +62,16 @@ export default function DocsPage() {
         <section className="mb-12">
           <h2 className="mb-4 text-lg font-medium text-ink">2. Make your first paid request</h2>
           <CodeBlock
-            code={`import { wrapFetchWithPayment } from "@revnuvo/x402";
+            code={`import { buildXPaymentHeader } from "@revnuvo/x402";
 
-const fetchWithPayment = wrapFetchWithPayment(fetch, { signer });
-const res = await fetchWithPayment("https://assess.revnuvo.site/domain/assess");`}
+const res = await fetch("https://assess.revnuvo.site/assess/domain", {
+  method: "POST",
+  body: JSON.stringify({ domain: "example.com" }),
+});
+const challenge = await res.json(); // 402 with a signed quote
+
+const xPaymentHeader = await buildXPaymentHeader({ challenge, privateKey });
+// retry the same request with X-Payment: xPaymentHeader`}
           />
         </section>
 

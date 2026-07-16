@@ -28,8 +28,14 @@ export default function HomePage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/docs"
+                href="/playground"
                 className="rounded-md bg-settle px-5 py-2.5 text-sm font-medium text-base transition-opacity hover:opacity-90"
+              >
+                Try x402
+              </Link>
+              <Link
+                href="/docs"
+                className="rounded-md border border-border px-5 py-2.5 text-sm text-ink transition-colors hover:border-settle/40"
               >
                 Get started
               </Link>
@@ -126,14 +132,19 @@ export default function HomePage() {
             title="terminal"
             code={`npm install @revnuvo/x402
 
-import { createAuthorization } from "@revnuvo/x402";
+import { buildXPaymentHeader } from "@revnuvo/x402";
 
-const res = await createAuthorization({
-  endpoint: "https://assess.revnuvo.site/domain/assess",
-  domain: "example.com",
+const res = await fetch("https://assess.revnuvo.site/assess/domain", {
+  method: "POST",
+  body: JSON.stringify({ domain: "example.com" }),
 });
+const challenge = await res.json();
 
-console.log(res.trust_score);`}
+const xPaymentHeader = await buildXPaymentHeader({
+  challenge,
+  privateKey: process.env.PRIVATE_KEY,
+});
+// retry with X-Payment: xPaymentHeader → 200 + result`}
           />
         </div>
       </section>

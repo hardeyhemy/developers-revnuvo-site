@@ -71,21 +71,59 @@ export default function GatewayPage() {
       </div>
 
       <h2 className="mb-4 text-lg font-medium text-ink">Protecting an endpoint</h2>
+      <p className="mb-4 text-sm text-muted">
+        The SDK (<span className="font-mono">@revnuvo/x402</span>) is client-side —
+        it signs payments, it doesn't gate resource servers. To protect your own
+        endpoint, call the gateway's <span className="font-mono">/quote</span>,{" "}
+        <span className="font-mono">/verify</span>, and{" "}
+        <span className="font-mono">/settle</span> directly, the same way
+        Revnuvo's own Assess Worker does:
+      </p>
       <div>
         <CodeBlock
           title="worker.ts"
-          code={`import { requirePayment } from "@revnuvo/x402";
+          code={`const GATEWAY = "https://gateway.revnuvo.site";
 
 export default {
   async fetch(req: Request) {
-    return requirePayment(req, {
-      price: "0.005",
-      asset: "USDC",
-      network: "eip155:8453",
-      gateway: "https://gateway.revnuvo.site",
-    }, async () => {
-      return new Response(JSON.stringify({ trust_score: 92 }));
+    const payment = req.headers.get("X-Payment");
+
+    if (!payment) {
+      // No payment yet — get a fresh signed quote and return it as the 402 body
+      const quoteRes = await fetch(\`\${GATEWAY}/quote\`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          path: "/your-resource",
+          maxAmountRequired: "50000", // atomic units
+          payTo: "0xYourAddress",
+          network: "eip155:8453",
+          asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        }),
+      });
+      return new Response(await quoteRes.text(), { status: 402 });
+    }
+
+    const { quote, payment: signedPayment } = JSON.parse(atob(payment));
+
+    const verifyRes = await fetch(\`\${GATEWAY}/verify\`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quote, payment: signedPayment }),
     });
+    const { valid, receipt } = await verifyRes.json();
+    if (!valid) return new Response("Payment invalid", { status: 402 });
+
+    const settleRes = await fetch(\`\${GATEWAY}/settle\`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ receipt }),
+    });
+    if (!(await settleRes.json()).settled) {
+      return new Response("Settlement failed", { status: 402 });
+    }
+
+    return new Response(JSON.stringify({ trust_score: 92 }));
   },
 };`}
         />
