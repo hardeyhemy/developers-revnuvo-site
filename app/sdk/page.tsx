@@ -14,7 +14,7 @@ export default function SdkPage() {
         <h1 className="text-3xl font-semibold tracking-tight text-ink">
           @revnuvo/x402
         </h1>
-        <VersionBadge version="0.1.3" />
+        <VersionBadge version="0.1.4" />
       </div>
       <p className="mb-10 max-w-xl text-base text-muted">
         A client-side TypeScript SDK for the x402 payment protocol. Signs
@@ -109,12 +109,20 @@ const data = await client.pay("https://assess.revnuvo.site/assess/domain", {
 
       <h2 className="mb-4 text-lg font-medium text-ink">Release notes</h2>
       <div className="rounded-lg border border-border bg-surface p-5 text-sm text-muted">
-        <p className="mb-1 font-mono text-ink">v0.1.3</p>
+        <p className="mb-1 font-mono text-ink">v0.1.4</p>
+        <p className="mb-3">
+          Corrects <span className="font-mono">buildXPaymentHeader</span> and{" "}
+          <span className="font-mono">X402Client</span> to sign with{" "}
+          <span className="font-mono">TransferWithAuthorization</span>, matching the
+          gateway's on-chain settlement call. v0.1.3 fixed this only for{" "}
+          <span className="font-mono">signPayment</span> — the other two export
+          paths still signed with the wrong type and would fail at settlement.
+          If you installed <span className="font-mono">0.1.3</span>, upgrade to{" "}
+          <span className="font-mono">0.1.4</span>.
+        </p>
+        <p className="font-mono text-ink">v0.1.3</p>
         <p>
-          Corrected EIP-3009 signing type to <span className="font-mono">TransferWithAuthorization</span>,
-          matching the gateway's on-chain settlement call. Fixes payment signatures across
-          <span className="font-mono"> signPayment</span>, <span className="font-mono">buildXPaymentHeader</span>,
-          and <span className="font-mono">X402Client</span>.
+          Partial fix — corrected <span className="font-mono">signPayment</span> only.
         </p>
       </div>
     </div>
